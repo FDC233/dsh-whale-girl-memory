@@ -1,0 +1,14 @@
+# DSH bundle layer for dsh-whale-girl-memory（鲸鱼娘记忆学习）
+- insert:
+    - id: dsh-whale-girl-memory
+      name: dsh-whale-girl-memory
+      config:
+        enabled: true
+        # 记忆库根目录；留空 = $DSH_HOME/memory（跨会话全局记忆）
+        root: ""
+        # 每次对话注入的既有经验条数上限（防止 prompt 膨胀）
+        injectLimit: 5
+        # 每条注入经验的正文截断长度（字符）
+        contentCap: 400
+        # 是否注入"记忆引导"提示（提醒模型使用记忆工具）
+        injectGuidance: true
