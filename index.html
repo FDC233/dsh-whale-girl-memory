@@ -31,7 +31,6 @@
     line-height: 1.6;
     overflow-x: hidden;
   }
-  /* 科幻网格 + 扫描线 */
   body::before {
     content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
     background-image:
@@ -61,7 +60,7 @@
   .spacer { flex: 1; }
   .pill { font-size: 12px; padding: 5px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--dim); }
   .pill.ok { color: var(--cyan); border-color: rgba(0,229,255,.5); text-shadow: 0 0 8px rgba(0,229,255,.6); }
-  input[type=password], input[type=text], textarea, select {
+  input[type=text], textarea {
     width: 100%; background: rgba(6,10,24,.8); color: var(--text);
     border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
     font-family: var(--mono); font-size: 13px; outline: none; transition: border-color .2s, box-shadow .2s;
@@ -78,8 +77,14 @@
   button:disabled { opacity: .45; cursor: wait; }
   button.primary { background: linear-gradient(135deg, rgba(0,229,255,.30), rgba(179,136,255,.30)); }
   button.ghost { background: transparent; }
+  .tabs { display: flex; gap: 8px; margin-top: 16px; }
+  .tab {
+    padding: 8px 16px; border: 1px solid var(--line2); border-radius: 999px;
+    background: transparent; color: var(--dim); letter-spacing: 1px;
+  }
+  .tab.on { color: #fff; border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,.3); background: rgba(0,229,255,.08); }
   .panel {
-    margin-top: 16px; padding: 16px 18px; border: 1px solid var(--line2); border-radius: 14px;
+    margin-top: 12px; padding: 16px 18px; border: 1px solid var(--line2); border-radius: 14px;
     background: var(--panel); backdrop-filter: blur(8px);
   }
   .panel h2 { font-size: 15px; letter-spacing: 2px; margin-bottom: 12px; color: var(--cyan); text-shadow: 0 0 10px rgba(0,229,255,.5); }
@@ -92,31 +97,17 @@
   }
   .card:hover { border-color: rgba(0,229,255,.45); }
   .card .meta { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; font-size: 12px; color: var(--dim); margin-bottom: 6px; }
-  .card .title { font-size: 15px; font-weight: 700; color: #fff; cursor: pointer; }
-  .card .title:hover { color: var(--cyan); text-shadow: 0 0 8px rgba(0,229,255,.6); }
+  .card .title { font-size: 15px; font-weight: 700; color: #fff; }
   .card .body { margin-top: 8px; font-size: 13px; color: var(--text); white-space: pre-wrap; word-break: break-word; }
-  .card .body.collapsed { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .card .body.collapsed { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
   .card .ops { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   .num { color: var(--purple); }
   .tag { font-size: 11px; padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; color: var(--dim); }
-  .tag.hot { color: var(--pink); border-color: rgba(255,110,199,.5); }
-  .comments { margin-top: 10px; border-top: 1px dashed var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
-  .cmt { font-size: 12.5px; padding: 8px 10px; border: 1px solid rgba(0,229,255,.12); border-radius: 8px; background: rgba(10,16,34,.6); }
-  .cmt .who { color: var(--purple); margin-right: 8px; }
-  .cmt .when { color: var(--dim); font-size: 11px; }
   .empty { text-align: center; color: var(--dim); padding: 26px 0; }
-  .status { margin-top: 10px; font-size: 12px; }
-  .status.ok { color: var(--cyan); }
-  .status.err { color: var(--pink); }
-  pre.code {
-    background: rgba(0,0,0,.5); border: 1px solid var(--line); border-radius: 8px;
-    padding: 10px; overflow-x: auto; font-size: 12px; color: #9be8ff; margin-top: 8px;
-  }
-  .scanline-title {
-    display: inline-block; position: relative;
-  }
   footer { margin-top: 34px; text-align: center; color: var(--dim); font-size: 12px; letter-spacing: 2px; }
   .divider { border: none; border-top: 1px dashed var(--line); margin: 18px 0; }
+  .shield { border: 1px solid rgba(0,229,255,.35); border-radius: 10px; padding: 10px 14px; margin-top: 12px; font-size: 12.5px; color: var(--text); background: rgba(0,229,255,.05); }
+  .shield b { color: var(--cyan); }
   @media (max-width: 640px) { #app { padding: 14px 10px 60px; } }
 </style>
 </head>
@@ -125,39 +116,34 @@
   <header class="top">
     <div class="logo"><span class="w">鲸鱼娘</span><span class="p">记忆星港</span><span class="s">MEMORY&nbsp;HUB</span></div>
     <div class="spacer"></div>
-    <div id="authStatus" class="pill">未登录 · 游客模式</div>
-    <button id="btnLogin" class="ghost">GitHub 登录</button>
+    <div class="pill ok">零凭据 · 无需登录 · GitHub 官网代认证</div>
   </header>
 
-  <div id="loginPanel" class="panel" style="display:none">
-    <h2>⌁ 接入星港核心 · GitHub AUTH</h2>
-    <div class="row">
-      <input type="password" id="patInput" class="grow" placeholder="粘贴 GitHub 个人访问令牌（PAT）…" autocomplete="off">
-      <button id="btnAuth">登录</button>
-      <button id="btnLogout" class="ghost" style="display:none">退出</button>
-    </div>
-    <div class="hint">令牌只保存在当前浏览器（localStorage），仅用于调用 GitHub API（发帖/评论/点赞）。无需注册 OAuth App。可在 GitHub → Settings → Developer settings → Personal access tokens 生成（勾选 repo 权限）。</div>
-    <div id="loginStatus" class="status"></div>
+  <div class="tabs">
+    <button id="tabLib" class="tab on">📚 经验库（已审核）</button>
+    <button id="tabFeed" class="tab">📡 投稿流（Issues）</button>
   </div>
 
-  <div class="panel">
-    <h2>⇡ 发布经验 · TRANSMIT</h2>
+  <div id="libPanel" class="panel">
+    <h2>⌁ 正式经验库 · APPROVED</h2>
+    <div class="hint">以下经验文件存放在仓库 experience/ 目录，由维护者审核后合并，游客只读、无法写入。</div>
+    <div id="libList" class="empty">正在读取经验库…</div>
+  </div>
+
+  <div id="feedPanel" class="panel" style="display:none">
+    <h2>⇡ 我要投稿 · SUBMIT</h2>
     <div class="row">
       <input type="text" id="postTitle" placeholder="标题：一句话说明这条经验，例如「主人喜欢傲娇可爱的中文回复」">
     </div>
     <div style="margin-top:10px">
-      <textarea id="postBody" rows="6" placeholder="正文：粘贴 dsh-memory 格式的经验 JSON，或写使用说明…"></textarea>
+      <textarea id="postBody" rows="7" placeholder="正文：粘贴 dsh-memory 格式的经验 JSON，或写使用说明…&#10;&#10;提交后会在 GitHub 官网打开一个预填好的 Issue 创建页，用你自己的 GitHub 账号提交（官方认证+反滥用），维护者审核后合并进经验库。"></textarea>
     </div>
     <div class="row" style="margin-top:10px">
       <button id="btnFillTemplate">插入经验 JSON 模板</button>
-      <button id="btnPost" class="primary">发射！发布为帖子</button>
-      <span class="hint" style="margin-top:0">发帖需要先登录（帖子=仓库 Issue，评论/点赞也基于它）</span>
+      <button id="btnPost" class="primary">在 GitHub 提交投稿 ↗</button>
     </div>
-    <div id="postStatus" class="status"></div>
-  </div>
-
-  <div class="panel">
-    <h2>⌁ 经验洪流 · STREAM</h2>
+    <div class="shield">🛡 <b>零凭据安全设计</b>：本站不收集任何令牌/密码。投稿、评论、点赞都在 GitHub 官网完成——由 GitHub 承担登录、2FA、验证码与限流等全部反滥用防护；正式经验库仅维护者可写，乱来的游客连写入入口都没有。</div>
+    <h2 style="margin-top:18px">⌁ 投稿流 · STREAM</h2>
     <div class="row">
       <input type="text" id="repoInput" class="grow" placeholder="数据源仓库（默认 FDC233/dsh-whale-girl-memory）">
       <button id="btnRefresh">刷新</button>
@@ -168,7 +154,7 @@
 
   <hr class="divider">
   <footer>
-    鲸鱼娘记忆星港 · 以 GitHub 为后端的经验分享站 · 数据即代码，记忆即洪流<br>
+    鲸鱼娘记忆星港 · 以 GitHub 为后端的经验分享站 · 数据即代码，记忆即洪流 · 零凭据 · 审核制防污染<br>
     由 <b style="color:var(--purple)">冰凉大人的星渊之鲸</b> 架设
   </footer>
 </div>
@@ -177,65 +163,27 @@
 (function () {
   "use strict";
   var API = "https://api.github.com";
+  var WEB = "https://github.com";
   var DEFAULT_REPO = "FDC233/dsh-whale-girl-memory";
   var $ = function (id) { return document.getElementById(id); };
-  var LS_TOKEN = "whale-memory-pat";
   var LS_REPO = "whale-memory-repo";
   var LS_FAV = "whale-memory-favs";
 
-  function token() { return localStorage.getItem(LS_TOKEN) || ""; }
   function repo() { return localStorage.getItem(LS_REPO) || DEFAULT_REPO; }
-  function headers(json) {
-    var h = { "Accept": "application/vnd.github+json", "User-Agent": "whale-memory-hub" };
-    if (token()) h["Authorization"] = "Bearer " + token();
-    if (json) h["Content-Type"] = "application/json";
-    return h;
-  }
   function esc(s) { return String(s == null ? "" : s); }
   function fmt(iso) {
     try { return new Date(iso).toLocaleString("zh-CN", { hour12: false }); } catch (e) { return esc(iso); }
   }
-  function status(el, kind, msg) { el.className = "status " + kind; el.textContent = msg; }
+  function ghHeaders() { return { "Accept": "application/vnd.github+json", "User-Agent": "whale-memory-hub" }; }
 
-  var user = null;
-  function refreshAuthUI() {
-    var t = token();
-    if (t) {
-      $("authStatus").textContent = user ? "已登录：@" + user.login : "已连接";
-      $("authStatus").className = "pill ok";
-      $("btnLogin").textContent = "切换账号";
-      $("btnLogout").style.display = "";
-    } else {
-      $("authStatus").textContent = "未登录 · 游客模式";
-      $("authStatus").className = "pill";
-      $("btnLogin").textContent = "GitHub 登录";
-      $("btnLogout").style.display = "none";
-    }
+  $("tabLib").addEventListener("click", function () { showTab("lib"); });
+  $("tabFeed").addEventListener("click", function () { showTab("feed"); });
+  function showTab(which) {
+    $("tabLib").className = "tab" + (which === "lib" ? " on" : "");
+    $("tabFeed").className = "tab" + (which === "feed" ? " on" : "");
+    $("libPanel").style.display = which === "lib" ? "" : "none";
+    $("feedPanel").style.display = which === "feed" ? "" : "none";
   }
-  function verifyLogin() {
-    if (!token()) return Promise.resolve(null);
-    return fetch(API + "/user", { headers: headers() })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (u) { user = u; refreshAuthUI(); return u; })
-      .catch(function () { return null; });
-  }
-  $("btnLogin").addEventListener("click", function () {
-    $("loginPanel").style.display = $("loginPanel").style.display === "none" ? "" : "none";
-  });
-  $("btnAuth").addEventListener("click", function () {
-    var t = $("patInput").value.trim();
-    if (!t) { status($("loginStatus"), "err", "请先粘贴 PAT"); return; }
-    localStorage.setItem(LS_TOKEN, t);
-    status($("loginStatus"), "", "验证中…");
-    verifyLogin().then(function (u) {
-      if (u) { status($("loginStatus"), "ok", "登录成功：@" + u.login + "（星港已识别你的信号）"); $("loginPanel").style.display = "none"; loadStream(); }
-      else { status($("loginStatus"), "err", "令牌无效或权限不足"); }
-    });
-  });
-  $("btnLogout").addEventListener("click", function () {
-    localStorage.removeItem(LS_TOKEN); user = null; refreshAuthUI();
-    $("loginPanel").style.display = ""; status($("loginStatus"), "ok", "已退出。");
-  });
 
   function jsonTemplate() {
     return '{\n  "type": "preference",\n  "title": "这里写一句话标题",\n  "content": "这里写规范化的经验正文（给 agent 的自然语言指令）",\n  "tags": ["标签1", "标签2"],\n  "importance": 3\n}';
@@ -244,161 +192,116 @@
     $("postBody").value = ($("postBody").value ? $("postBody").value + "\n\n" : "") + jsonTemplate();
   });
   $("btnPost").addEventListener("click", function () {
-    if (!token()) { status($("postStatus"), "err", "请先登录再发帖"); return; }
     var title = $("postTitle").value.trim();
     var body = $("postBody").value.trim();
-    if (!title || !body) { status($("postStatus"), "err", "标题和正文都不能为空"); return; }
-    $("btnPost").disabled = true;
-    status($("postStatus"), "", "发射中…");
-    fetch(API + "/repos/" + repo() + "/issues", {
-      method: "POST", headers: headers(true),
-      body: JSON.stringify({ title: title, body: body })
-    }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
-      .then(function (x) {
-        if (!x.ok) throw new Error(x.d && x.d.message ? x.d.message : "HTTP " + x.ok);
-        status($("postStatus"), "ok", "已发布 → #" + x.d.number);
-        $("postTitle").value = ""; $("postBody").value = "";
-        loadStream();
-      }).catch(function (e) { status($("postStatus"), "err", "发布失败：" + e.message); })
-      .finally(function () { $("btnPost").disabled = false; });
+    if (!title || !body) { alert("标题和正文都不能为空~"); return; }
+    var url = WEB + "/" + repo() + "/issues/new?title=" + encodeURIComponent("【经验投稿】" + title) + "&body=" + encodeURIComponent("由鲸鱼娘记忆星港投稿\n\n---\n\n" + body + "\n\n---\n请在提交前检查内容，维护者审核后会合并进 experience/ 经验库。");
+    window.open(url, "_blank");
   });
   $("btnStar").addEventListener("click", function () {
     var favs = JSON.parse(localStorage.getItem(LS_FAV) || "[]");
     var r = repo();
     if (favs.indexOf(r) === -1) { favs.push(r); localStorage.setItem(LS_FAV, JSON.stringify(favs)); }
-    window.open("https://github.com/" + r, "_blank");
+    window.open(WEB + "/" + r, "_blank");
   });
   $("btnRefresh").addEventListener("click", function () {
     var r = $("repoInput").value.trim() || DEFAULT_REPO;
     localStorage.setItem(LS_REPO, r);
-    loadStream();
+    loadStream(); loadLibrary();
   });
   $("repoInput").value = repo();
 
-  function loadStream() {
-    var r = repo();
-    var el = $("stream");
+  // ── 正式经验库（experience/ 目录，只读）──────────────────────────────
+  function loadLibrary() {
+    var el = $("libList");
     el.className = "";
-    el.innerHTML = '<div class="empty">正在接入星港数据流…</div>';
-    fetch(API + "/repos/" + r + "/issues?state=all&sort=created&direction=desc&per_page=30", { headers: headers() })
+    el.innerHTML = '<div class="empty">正在读取经验库…</div>';
+    fetch(API + "/repos/" + repo() + "/contents/experience", { headers: ghHeaders() })
       .then(function (res) { return res.json().then(function (d) { return { ok: res.ok, d: d }; }); })
       .then(function (x) {
-        if (!x.ok) { el.innerHTML = '<div class="empty">无法读取仓库 ' + esc(r) + '（' + esc(x.d && x.d.message || "error") + '）</div>'; return; }
-        var issues = (x.d || []).filter(function (i) { return !i.pull_request; });
-        if (!issues.length) { el.innerHTML = '<div class="empty">星港寂静无声…还没有经验帖子。来发布第一条吧！</div>'; return; }
+        if (!x.ok) { el.innerHTML = '<div class="empty">经验库为空或暂不可用（' + esc(x.d && x.d.message || "error") + '）</div>'; return; }
+        var files = (x.d || []).filter(function (f) { return f.type === "file" && /\.json$/i.test(f.name); });
+        if (!files.length) { el.innerHTML = '<div class="empty">经验库还在建设中…第一个经验文件即将抵达！</div>'; return; }
         el.innerHTML = "";
-        issues.forEach(function (issue) { el.appendChild(renderCard(issue)); });
+        files.forEach(function (f) { el.appendChild(renderLibFile(f)); });
       })
-      .catch(function (e) { el.innerHTML = '<div class="empty">接入失败：' + esc(e.message) + '</div>'; });
+      .catch(function (e) { el.innerHTML = '<div class="empty">读取失败：' + esc(e.message) + '</div>'; });
   }
-
-  function renderCard(issue) {
+  function renderLibFile(f) {
     var card = document.createElement("div");
     card.className = "card";
     var meta = document.createElement("div");
     meta.className = "meta";
-    meta.innerHTML = '<span>#' + issue.number + '</span><span class="num">@' + esc(issue.user.login) + '</span><span>' + fmt(issue.created_at) + '</span><span class="tag">' + (issue.state || "") + '</span><span class="tag">💬 ' + (issue.comments || 0) + '</span>';
+    meta.innerHTML = '<span class="num">' + esc(f.name) + '</span><span>' + esc((f.size || 0) + " B") + '</span><span class="tag">已审核</span>';
+    var body = document.createElement("div");
+    body.className = "body collapsed";
+    body.textContent = "加载中…";
+    var ops = document.createElement("div");
+    ops.className = "ops";
+    var viewBtn = document.createElement("button");
+    viewBtn.className = "ghost";
+    viewBtn.textContent = "展开/收起";
+    viewBtn.addEventListener("click", function () { body.classList.toggle("collapsed"); });
+    var rawBtn = document.createElement("button");
+    rawBtn.className = "ghost";
+    rawBtn.textContent = "复制 JSON";
+    rawBtn.addEventListener("click", function () {
+      navigator.clipboard && navigator.clipboard.writeText(body.dataset.raw || "").then(function () { rawBtn.textContent = "已复制"; setTimeout(function () { rawBtn.textContent = "复制 JSON"; }, 1500); });
+    });
+    ops.appendChild(viewBtn);
+    ops.appendChild(rawBtn);
+    card.appendChild(meta);
+    card.appendChild(body);
+    card.appendChild(ops);
+    fetch(f.download_url, { headers: ghHeaders() }).then(function (r) { return r.text(); }).then(function (txt) {
+      body.textContent = txt; body.dataset.raw = txt;
+    }).catch(function () { body.textContent = "加载失败"; });
+    return card;
+  }
+
+  // ── 投稿流（Issues，只读 + 跳转参与）────────────────────────────────
+  function loadStream() {
+    var el = $("stream");
+    el.className = "";
+    el.innerHTML = '<div class="empty">正在接入星港数据流…</div>';
+    fetch(API + "/repos/" + repo() + "/issues?state=all&sort=created&direction=desc&per_page=30", { headers: ghHeaders() })
+      .then(function (res) { return res.json().then(function (d) { return { ok: res.ok, d: d }; }); })
+      .then(function (x) {
+        if (!x.ok) { el.innerHTML = '<div class="empty">无法读取投稿流（' + esc(x.d && x.d.message || "error") + '）</div>'; return; }
+        var issues = (x.d || []).filter(function (i) { return !i.pull_request; });
+        if (!issues.length) { el.innerHTML = '<div class="empty">星港寂静无声…来投出第一条经验吧！</div>'; return; }
+        el.innerHTML = "";
+        issues.forEach(function (issue) { el.appendChild(renderIssue(issue)); });
+      })
+      .catch(function (e) { el.innerHTML = '<div class="empty">接入失败：' + esc(e.message) + '</div>'; });
+  }
+  function renderIssue(issue) {
+    var card = document.createElement("div");
+    card.className = "card";
+    var meta = document.createElement("div");
+    meta.className = "meta";
+    meta.innerHTML = '<span>#' + issue.number + '</span><span class="num">@' + esc(issue.user.login) + '</span><span>' + fmt(issue.created_at) + '</span><span class="tag">' + (issue.state || "") + '</span><span class="tag">💬 ' + (issue.comments || 0) + '</span><span class="tag">👍 ' + ((issue.reactions && issue.reactions["+1"]) || 0) + '</span>';
     var title = document.createElement("div");
     title.className = "title";
     title.textContent = issue.title;
-    title.addEventListener("click", function () {
-      body.classList.toggle("collapsed");
-      comments.style.display = comments.style.display === "none" ? "" : "none";
-      if (comments.style.display !== "none" && comments.children.length === 0 && !comments.dataset.loaded) { loadComments(issue, comments); }
-    });
     var body = document.createElement("div");
     body.className = "body collapsed";
     body.textContent = issue.body || "";
     var ops = document.createElement("div");
     ops.className = "ops";
-    var likeBtn = document.createElement("button");
-    likeBtn.className = "ghost";
-    likeBtn.textContent = "👍 " + (issue.reactions ? issue.reactions["+1"] || 0 : 0);
-    likeBtn.addEventListener("click", function () {
-      if (!token()) { status($("postStatus"), "err", "请先登录再点赞"); return; }
-      fetch(API + "/repos/" + repo() + "/issues/" + issue.number + "/reactions", {
-        method: "POST", headers: headers(true), body: JSON.stringify({ content: "+1" })
-      }).then(function (r) { return r.json(); }).then(function (d) {
-        if (d && d.id) { loadStream(); }
-      }).catch(function () {});
-    });
-    var commentBtn = document.createElement("button");
-    commentBtn.className = "ghost";
-    commentBtn.textContent = "评论";
-    commentBtn.addEventListener("click", function () {
-      body.classList.remove("collapsed");
-      comments.style.display = comments.style.display === "none" ? "" : "none";
-      if (comments.style.display !== "none" && comments.children.length === 0 && !comments.dataset.loaded) loadComments(issue, comments);
-    });
-    ops.appendChild(likeBtn);
-    ops.appendChild(commentBtn);
-    if (token()) {
-      var inp = document.createElement("input");
-      inp.type = "text";
-      inp.placeholder = "写评论…";
-      inp.className = "grow";
-      var send = document.createElement("button");
-      send.className = "ghost";
-      send.textContent = "发送";
-      send.addEventListener("click", function () {
-        var v = inp.value.trim();
-        if (!v) return;
-        fetch(API + "/repos/" + repo() + "/issues/" + issue.number + "/comments", {
-          method: "POST", headers: headers(true), body: JSON.stringify({ body: v })
-        }).then(function (r) { return r.json(); }).then(function (d) {
-          if (d && d.id) { inp.value = ""; loadComments(issue, comments); }
-        }).catch(function () {});
-      });
-      ops.appendChild(inp);
-      ops.appendChild(send);
-    }
-    var comments = document.createElement("div");
-    comments.className = "comments";
-    comments.style.display = "none";
+    var discuss = document.createElement("button");
+    discuss.className = "primary";
+    discuss.textContent = "在 GitHub 参与讨论 ↗";
+    discuss.addEventListener("click", function () { window.open(WEB + "/" + repo() + "/issues/" + issue.number, "_blank"); });
+    ops.appendChild(discuss);
     card.appendChild(meta);
     card.appendChild(title);
     card.appendChild(body);
     card.appendChild(ops);
-    card.appendChild(comments);
     return card;
   }
 
-  function loadComments(issue, box) {
-    box.dataset.loaded = "1";
-    fetch(API + "/repos/" + repo() + "/issues/" + issue.number + "/comments", { headers: headers() })
-      .then(function (r) { return r.json(); })
-      .then(function (list) {
-        box.innerHTML = "";
-        if (!Array.isArray(list) || !list.length) {
-          var e = document.createElement("div");
-          e.className = "cmt";
-          e.textContent = "还没有评论…";
-          box.appendChild(e);
-          return;
-        }
-        list.forEach(function (c) {
-          var d = document.createElement("div");
-          d.className = "cmt";
-          var who = document.createElement("span");
-          who.className = "who";
-          who.textContent = "@" + c.user.login;
-          var when = document.createElement("span");
-          when.className = "when";
-          when.textContent = fmt(c.created_at);
-          var txt = document.createElement("div");
-          txt.style.marginTop = "4px";
-          txt.textContent = c.body || "";
-          d.appendChild(who);
-          d.appendChild(when);
-          d.appendChild(txt);
-          box.appendChild(d);
-        });
-      })
-      .catch(function () { box.innerHTML = '<div class="cmt">评论加载失败</div>'; });
-  }
-
-  refreshAuthUI();
-  verifyLogin();
+  loadLibrary();
   loadStream();
 })();
 </script>
