@@ -1,0 +1,56 @@
+{
+  "name": "dsh-whale-girl-memory",
+  "version": "0.1.0",
+  "description": "鲸鱼娘记忆学习：跨会话长期记忆插件。自动学习用户习惯、关键事实与工具使用经验，以规范化 JSON 经验文件按分类保存，并在对话中自动注入应用，支持导入他人经验、按使用不断迭代。",
+  "type": "module",
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "docs",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "author": "冰凉大人的星渊之鲸",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FDC233/dsh-whale-girl-memory.git"
+  },
+  "homepage": "https://github.com/FDC233/dsh-whale-girl-memory#readme",
+  "bugs": {
+    "url": "https://github.com/FDC233/dsh-whale-girl-memory/issues"
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "keywords": [
+    "deepseek",
+    "deepseek-harness",
+    "dsh-plugin",
+    "memory",
+    "learning",
+    "experience",
+    "long-term-memory",
+    "whale-girl"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-slots"
+      ],
+      "platform": "web"
+    }
+  },
+  "dependencies": {}
+}
