@@ -102,7 +102,8 @@ dsh-whale-girl-memory/
 │   └── client.js       # web 端：设置页「记忆学习」面板
 ├── docs/
 │   └── FORMAT.md       # dsh-memory 经验文件规范（规范化语言定义）
-├── index.html          # 经验分享站（科幻风格，GitHub 驱动：发帖/评论/评分/收藏）
+├── index.html          # 经验分享站（科幻风格，零凭据，GitHub 驱动：浏览/投稿/评论/评分/收藏）
+├── experience/         # 正式经验库（维护者审核后合并，游客只读）
 ├── cordis.patch.yml
 ├── README.md
 └── LICENSE
@@ -114,13 +115,14 @@ dsh-whale-girl-memory/
 
 配套的**鲸鱼娘记忆星港**分享站（`index.html`，科幻风格单页应用，以 GitHub 为后端，本仓库的 GitHub Pages 即为此部署）：
 
-- **GitHub 登录**：输入 GitHub 个人访问令牌（PAT，仅存浏览器本地）即可发帖/评论/评分；
-- **分享经验**：把经验 JSON 作为帖子发布到本仓库的 Issues；
-- **评论区**：每条帖子可评论讨论；
-- **评分**：对帖子点赞（GitHub Reactions +1）；
-- **收藏夹**：本地收藏 + 一键跳转 GitHub Star。
+- **零凭据安全设计**：本站**不收集任何令牌/密码**（没有 PAT、没有 OAuth、没有登录框）；
+- **浏览**：任何游客可浏览「正式经验库」（仓库 `experience/` 目录，维护者审核后合并，只读）与「投稿流」（Issues，只读展示）；
+- **投稿**：网站生成预填好的 GitHub Issue 创建链接 → 在 **GitHub 官网**用你自己的账号提交——由 GitHub 承担登录、2FA、验证码、限流等全部反滥用防护；
+- **防污染**：正式经验库仅维护者可写（需要 push 权限），乱来的游客连写入入口都没有；投稿经维护者审核才会合并；
+- **评论/点赞**：跳转 GitHub 官方 Issue 页面参与；站内只读展示评论数与点赞数；
+- **收藏**：本地收藏 + 一键跳转 GitHub Star。
 
-访问地址：`https://fdc233.github.io/dsh-whale-girl-memory/`（GitHub Pages 部署，仓库 Settings → Pages 已配置）。
+访问地址：`https://fdc233.github.io/dsh-whale-girl-memory/`（GitHub Pages 部署）。
 
 ---
 
