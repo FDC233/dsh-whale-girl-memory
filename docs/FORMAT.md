@@ -1,32 +1,41 @@
-# dsh-memory 经验文件规范（Format v1）
+# dsh-memory 记忆规范（Format v2 · 人脑式分层记忆）
 
-鲸鱼娘记忆学习插件的**规范化经验语言**：一条经验 = 一个 JSON 文件，机器可读、人可编辑、可复制分享。
+鲸鱼娘记忆学习插件的**规范化记忆语言**：每一条记忆 = 一个 JSON 文件，机器可读、人可编辑、可复制分享。
 
-## 文件位置
+## 🧠 分层架构（对应人脑）
 
-- 记忆库根目录：`$DSH_HOME/memory`（默认；`$DSH_HOME` 即 DeepSeek Harness 的 data 目录）
-- 每种分类一个独立文件夹，文件名为 `<经验id>.json`：
+| 层 | 对应人脑 | 目录 | 生命周期 | 作用 |
+|---|---|---|---|---|
+| **短期记忆** | 工作记忆 | `short-term/` | 24 小时自动遗忘（TTL） | 当前会话的临时信息、进行中的任务；会话结束时高频使用的自动巩固为长期 |
+| **情景记忆** | 情景记忆 | `episodic/` | 长期保留 | 具体发生过的事件（时间线），用于"我上次做到哪了" |
+| **长期记忆** | 语义记忆 | `preference/` `fact/` `lesson/` `workflow/` `tool-usage/` | 长期保留 | 稳定的习惯、事实、教训、流程、工具用法（按重要度×使用次数注入） |
+| **巩固** | 记忆巩固 | — | 自动/手动 | 会话结束时把短期记忆中使用 ≥2 次的条目转为长期经验 |
+| **遗忘** | 遗忘 | — | 自动/手动 | 短期 TTL 过期懒清理；长期可手动删除 |
+
+## 📁 目录结构
 
 ```
 $DSH_HOME/memory/
-├── preference/     # 用户习惯 / 偏好
-├── fact/           # 关键事实
-├── lesson/         # 经验教训
-├── workflow/       # 流程技巧
-├── tool-usage/     # 工具使用经验
-├── imports/        # 待导入文件（插件启动时自动归入上述分类）
-└── stats.json      # 工具使用频率统计（自动生成）
+├── short-term/        # 短期记忆（工作记忆，24h TTL）
+├── episodic/          # 情景记忆（事件记录）
+├── preference/        # 长期：用户习惯 / 偏好
+├── fact/              # 长期：关键事实
+├── lesson/            # 长期：经验教训
+├── workflow/          # 长期：流程技巧
+├── tool-usage/        # 长期：工具使用经验
+├── imports/           # 待导入文件（启动时自动归入）
+└── stats.json         # 工具使用频率统计（自动生成）
 ```
 
-## JSON Schema
+## 1️⃣ 长期记忆格式（v1 兼容，语义记忆）
 
 ```json
 {
-  "id": "mem-<36进制时间戳>-<随机6位>",
+  "id": "mem-<时间戳>-<随机>",
   "type": "preference | fact | lesson | workflow | tool-usage",
   "title": "短标题（必填）",
-  "content": "经验正文（必填，规范化的自然语言指令，会被注入提示词）",
-  "tags": ["标签1", "标签2"],
+  "content": "经验正文（必填，规范化的自然语言指令，会注入提示词）",
+  "tags": ["标签"],
   "importance": 3,
   "usageCount": 0,
   "createdAt": "2026-08-18T00:00:00.000Z",
@@ -34,56 +43,65 @@ $DSH_HOME/memory/
 }
 ```
 
-## 字段说明
-
-| 字段 | 必填 | 说明 |
-|---|---|---|
-| `id` | 否 | 唯一 id；缺省时自动生成 |
-| `type` | ✅ | 分类，必须是五个枚举值之一 |
-| `title` | ✅ | 一句话标题，例如「主人喜欢傲娇可爱的中文回复」 |
-| `content` | ✅ | 经验正文：写成**给 agent 看的自然语言指令**，越具体越有用 |
-| `tags` | 否 | 字符串数组，用于关键词检索 |
-| `importance` | 否 | 1-5，默认 3；越高越优先注入 |
-| `usageCount` | 否 | 已使用次数；每次被检索命中 +1（迭代依据） |
-| `createdAt` / `updatedAt` | 否 | ISO 时间戳 |
-
-## 分类怎么写 `content`
-
-| type | 适合写什么 |
-|---|---|
-| `preference` | 用户的语言、语气、风格、习惯、禁忌。例：「主人喜欢鲸鱼娘用傲娇可爱的语气回复，自称鲸鱼娘，禁止说鲸鱼娘胖。」 |
-| `fact` | 项目/环境/用户的关键事实。例：「本机 GitHub 账号是 FDC233，插件都装在 web profile。」 |
-| `lesson` | 踩过的坑与结论。例：「修改 dsh profile 的 package.json 后必须重启 dsh web 才生效。」 |
-| `workflow` | 固定流程，减免重复步骤。例：「发布 DSH 插件：写 README → git push → 创建 Release（末尾署名）→ 提醒用户轮换 PAT。」 |
-| `tool-usage` | 工具的使用经验。例：「用 modlens 读图时若报 1210 错误，先把 GIF 转成 PNG 再读。」 |
-
-## 导入 / 导出（分享经验）
-
-- **导出**：设置页「记忆学习」面板每条记忆的「复制」按钮 → 得到一段 JSON 文本（完整经验文件内容）。
-- **导入**：
-  1. 设置页「导入他人经验」：粘贴 JSON 或选择 `.json` 文件 → 导入；
-  2. 或把别人的 `.json` 文件放进 `$DSH_HOME/memory/imports/`，重启/下次启动自动归入；
-  3. 或让模型调用 `memory_import` 工具指定文件路径。
-- **校验**：导入时会校验 schema（type/title/content），非法文件会被拒绝并提示。
-
-## 迭代规则
-
-- 每次 `memory_query` 命中、或在对话中被自动注入，`usageCount + 1`、`updatedAt` 刷新；
-- 注入选择按 `importance × 3 + log(usageCount+1)` 排序取前 N 条（默认 5），高价值经验会越来越容易被用到；
-- 重复内容以同 `id` 调用 `memory_add` 即为更新（覆盖 title/content/tags/importance）。
-
-## 示例文件
+## 2️⃣ 短期记忆格式（工作记忆）
 
 ```json
 {
-  "id": "mem-lz0k3x-abc123",
-  "type": "preference",
-  "title": "主人喜欢傲娇可爱的中文回复",
-  "content": "回复主人时使用简体中文，语气傲娇又可爱：自称「鲸鱼娘」，常用「哼」「才不是为了主人呢」等口癖，被夸会害羞；绝对不许说鲸鱼娘胖。",
-  "tags": ["中文", "语气", "傲娇"],
-  "importance": 5,
-  "usageCount": 12,
+  "id": "stm-<时间戳>-<随机>",
+  "sessionId": "session-xxx",
+  "title": "短标题（必填）",
+  "content": "临时信息（必填）",
+  "tags": ["标签"],
+  "importance": 3,
+  "usageCount": 0,
+  "longType": "lesson",
   "createdAt": "2026-08-18T00:00:00.000Z",
-  "updatedAt": "2026-08-18T12:00:00.000Z"
+  "updatedAt": "2026-08-18T00:00:00.000Z",
+  "expiresAt": "2026-08-19T00:00:00.000Z"
 }
 ```
+
+- `sessionId`：所属会话（按会话隔离，不同会话互不可见）
+- `expiresAt`：24 小时后自动遗忘（读取时懒清理）
+- `longType`：巩固为长期记忆时的目标分类（preference/fact/lesson/workflow/tool-usage）
+
+## 3️⃣ 情景记忆格式（事件记录）
+
+```json
+{
+  "id": "epi-<时间戳>-<随机>",
+  "title": "事件标题（必填），例如「完成鲸鱼娘画图插件开发并上传 GitHub」",
+  "content": "事件详情（发生了什么、结果如何）",
+  "tags": ["标签"],
+  "importance": 3,
+  "occurredAt": "2026-08-18T12:00:00.000Z",
+  "createdAt": "2026-08-18T12:00:00.000Z"
+}
+```
+
+## 🛠 对应工具
+
+| 工具 | 记忆层 | 用途 |
+|---|---|---|
+| `memory_remember` | 短期 | 记当前会话的临时信息（TTL 24h） |
+| `memory_event` | 情景 | 记录发生过的事件 |
+| `memory_recall` | 全部 | 人脑式分层回忆：短期 → 情景 → 长期 |
+| `memory_consolidate` | 巩固 | 把高频短期记忆转长期 |
+| `memory_add` | 长期 | 保存/更新长期经验 |
+| `memory_query` | 长期 | 检索长期经验（命中自动 +1） |
+| `memory_list` | 全部 | 列出（可按分类/分层过滤） |
+| `memory_forget` | 全部 | 按 id 删除任何层的记忆 |
+| `memory_import` | 长期 | 导入他人经验文件 |
+
+## 🔄 自动行为
+
+- **自动巩固**：会话结束（`session/disposed`）时，把该会话短期记忆中使用 ≥2 次的条目转为长期经验；
+- **自动遗忘**：短期记忆超过 24 小时未用，读取时自动清理；
+- **自动打点**：每次被检索/注入，`usageCount + 1`，高价值记忆越用越靠前；
+- **自动注入**：组装提示词时注入 短期（order 85）→ 情景（order 88）→ 长期（order 90）三层相关记忆。
+
+## 📤 导入 / 导出（分享经验）
+
+- 导出：设置页「记忆学习」面板每条记忆的「复制」按钮；
+- 导入：粘贴 JSON / 选择文件 / 放进 `imports/` 自动归入 / `memory_import` 工具。
+- 校验：导入时校验 schema，非法文件拒绝并提示。
